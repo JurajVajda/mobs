@@ -1,4 +1,4 @@
--- Mobs Api (2nd February 2016)
+-- Mobs Api (7th February 2016)
 mobs = {}
 mobs.mod = "redo"
 
@@ -2082,7 +2082,8 @@ function mobs:register_arrow(name, def)
 
 				local node = node_ok(pos).name
 
-				if minetest.registered_nodes[node].walkable then
+				--if minetest.registered_nodes[node].walkable then
+				if node ~= "air" then
 
 					self.hit_node(self, pos, node)
 
