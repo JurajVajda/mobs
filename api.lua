@@ -11,6 +11,7 @@ local spawn_protected = tonumber(minetest.setting_get("mobs_spawn_protected")) o
 local remove_far = minetest.setting_getbool("remove_far_mobs")
 
 -- pathfinding settings
+local enable_pathfinding = true
 local stuck_timeout = 5 -- how long before mob gets stuck in place and starts searching
 local stuck_path_timeout = 15 -- how long will mob follow path before giving up
 
@@ -1485,9 +1486,12 @@ minetest.register_entity(name, {
 			if dist > self.reach then
 
 				-- PATH FINDING by rnd
+				if enable_pathfinding then
+
 				local s1 = self.path.lastpos
 
 				if math.abs(s1.x - s.x) + math.abs(s1.z - s.z) < 2 then
+
 					-- rnd: almost standing still, to do: insert path finding here
 					self.path.stuck_timer = self.path.stuck_timer + dtime
 				else
@@ -1498,6 +1502,7 @@ minetest.register_entity(name, {
 
 				if (self.path.stuck_timer > stuck_timeout and not self.path.stuck)
 				or (self.path.stuck_timer > stuck_path_timeout and self.path.stuck) then
+
 					-- im stuck, search for path
 					self.path.stuck = true
 
@@ -1508,6 +1513,16 @@ minetest.register_entity(name, {
 					s.x = math.floor(s.x + 0.5)
 					s.y = math.floor(s.y + 0.5) - sheight
 					s.z = math.floor(s.z + 0.5)
+
+					local ssight, sground
+
+					ssight, sground = minetest.line_of_sight(s,
+						{x = s.x, y = s. y - 4, z = s.z}, 1)
+
+					-- determine node above ground
+					if not ssight then
+						s.y = sground.y + 1
+					end
 
 					--minetest.chat_send_all("stuck at " .. s.x .." " .. s.y .. " " .. s.z .. ", calculating path")
 
@@ -1525,7 +1540,15 @@ minetest.register_entity(name, {
 
 						self.path.stuck = false
 
-						-- play sound to acknowledge found way
+						-- can't find path, play sound
+						if self.sounds.random then
+						minetest.sound_play(self.sounds.random, {
+							object = self.object,
+							max_hear_distance = self.sounds.distance
+						})
+						end
+					else
+						-- found path, play sound
 						if self.sounds.attack then
 						minetest.sound_play(self.sounds.attack, {
 							object = self.object,
@@ -1533,11 +1556,12 @@ minetest.register_entity(name, {
 						})
 						end
 
-						--else minetest.chat_send_all("found path with length " .. #self.path.way);
+						--minetest.chat_send_all("found path with length " .. #self.path.way);
 					end
 
 					self.path.stuck_timer = 0
 
+				end -- END  if pathfinding enabled
 				end
 				-- END PATH FINDING
 
