@@ -1974,7 +1974,7 @@ function mobs:spawn_specific(name, nodes, neighbors, min_light, max_light,
 
 	if new_chance ~= nil then
 
-		if chance == 0 then
+		if new_chance == 0 then
 			print("[Mobs Redo] " .. name .. " has spawning disabled")
 			return
 		end
