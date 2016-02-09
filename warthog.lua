@@ -28,8 +28,7 @@ mobs:register_mob("mobs:pumba", {
 	follow = {"default:apple", "farming:potato"},
 	view_range = 10,
 	drops = {
-		{name = "mobs:pork_raw",
-		chance = 1, min = 1, max = 3},
+		{name = "mobs:pork_raw", chance = 1, min = 1, max = 3},
 	},
 	water_damage = 1,
 	lava_damage = 5,
@@ -45,14 +44,17 @@ mobs:register_mob("mobs:pumba", {
 		punch_end = 100,
 	},
 	on_rightclick = function(self, clicker)
+
 		if mobs:feed_tame(self, clicker, 8, true, true) then
 			return
 		end
+
 		mobs:capture_mob(self, clicker, 0, 5, 50, false, nil)
 	end,
 })
 
-mobs:register_spawn("mobs:pumba", {"ethereal:mushroom_dirt", "default:dirt_with_dry_grass"}, 20, 10, 15000, 2, 31000)
+mobs:register_spawn("mobs:pumba",
+	{"ethereal:mushroom_dirt", "default:dirt_with_dry_grass"}, 20, 10, 15000, 2, 31000, true)
 
 mobs:register_egg("mobs:pumba", "Warthog", "wool_pink.png", 1)
 

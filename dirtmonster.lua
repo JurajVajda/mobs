@@ -26,8 +26,7 @@ mobs:register_mob("mobs:dirt_monster", {
 	run_velocity = 3,
 	jump = true,
 	drops = {
-		{name = "default:dirt",
-		chance = 1, min = 3, max = 5},
+		{name = "default:dirt", chance = 1, min = 3, max = 5},
 	},
 	water_damage = 1,
 	lava_damage = 5,
@@ -47,6 +46,7 @@ mobs:register_mob("mobs:dirt_monster", {
 	},
 })
 
-mobs:register_spawn("mobs:dirt_monster", {"default:dirt_with_grass", "ethereal:gray_dirt"}, 7, 0, 7000, 2, 31000)
+mobs:register_spawn("mobs:dirt_monster",
+	{"default:dirt_with_grass", "ethereal:gray_dirt"}, 7, 0, 7000, 2, 31000, false)
 
 mobs:register_egg("mobs:dirt_monster", "Dirt Monster", "default_dirt.png", 1)

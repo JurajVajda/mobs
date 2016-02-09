@@ -26,8 +26,7 @@ mobs:register_mob("mobs:kitten", {
 	runaway = true,
 	jump = false,
 	drops = {
-		{name = "farming:string",
-		chance = 1, min = 1, max = 1},
+		{name = "farming:string", chance = 1, min = 1, max = 1},
 	},
 	water_damage = 1,
 	lava_damage = 5,
@@ -42,13 +41,16 @@ mobs:register_mob("mobs:kitten", {
 	follow = {"mobs:rat", "ethereal:fish_raw"},
 	view_range = 8,
 	on_rightclick = function(self, clicker)
+
 		if mobs:feed_tame(self, clicker, 4, true, true) then
 			return
 		end
+
 		mobs:capture_mob(self, clicker, 50, 50, 90, false, nil)
 	end
 })
 
-mobs:register_spawn("mobs:kitten", {"default:dirt_with_grass", "ethereal:grove_dirt"}, 20, 12, 22000, 2, 31000)
+mobs:register_spawn("mobs:kitten",
+	{"default:dirt_with_grass", "ethereal:grove_dirt"}, 20, 12, 22000, 2, 31000, true)
 
 mobs:register_egg("mobs:kitten", "Kitten", "mobs_kitten_inv.png", 0)

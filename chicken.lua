@@ -30,8 +30,7 @@ mobs:register_mob("mobs:chicken", {
 	runaway = true,
 	jump = true,
 	drops = {
-		{name = "mobs:chicken_raw",
-		chance = 1, min = 2, max = 2},
+		{name = "mobs:chicken_raw", chance = 1, min = 2, max = 2},
 	},
 	water_damage = 1,
 	lava_damage = 5,
@@ -50,17 +49,23 @@ mobs:register_mob("mobs:chicken", {
 	view_range = 5,
 
 	on_rightclick = function(self, clicker)
+
 		if mobs:feed_tame(self, clicker, 8, true, true) then
 			return
 		end
+
 		mobs:capture_mob(self, clicker, 30, 50, 80, false, nil)
 	end,
 
 	do_custom = function(self)
+
 		if not self.child
 		and math.random(1, 500) == 1 then
+
 			local pos = self.object:getpos()
+
 			minetest.add_item(pos, "mobs:egg")
+
 			minetest.sound_play("default_place_node_hard", {
 				pos = pos,
 				gain = 1.0,
@@ -70,7 +75,8 @@ mobs:register_mob("mobs:chicken", {
 	end,
 })
 
-mobs:register_spawn("mobs:chicken", {"default:dirt_with_grass", "ethereal:bamboo_dirt"}, 20, 10, 15000, 2, 31000)
+mobs:register_spawn("mobs:chicken",
+	{"default:dirt_with_grass", "ethereal:bamboo_dirt"}, 20, 10, 15000, 2, 31000, true)
 
 mobs:register_egg("mobs:chicken", "Chicken", "mobs_chicken_inv.png", 0)
 
@@ -99,16 +105,22 @@ mobs:register_arrow("mobs:egg_entity", {
 	hit_node = function(self, pos, node)
 
 		local num = math.random(1, 10)
+
 		if num == 1 then
+
 			pos.y = pos.y + 1
+
 			local nod = minetest.get_node_or_nil(pos)
+
 			if not nod
 			or not minetest.registered_nodes[nod.name]
 			or minetest.registered_nodes[nod.name].walkable == true then
 				return
 			end
+
 			local mob = minetest.add_entity(pos, "mobs:chicken")
 			local ent2 = mob:get_luaentity()
+
 			mob:set_properties({
 				textures = ent2.child_texture[1],
 				visual_size = {
@@ -124,6 +136,7 @@ mobs:register_arrow("mobs:egg_entity", {
 					ent2.base_colbox[6] / 2
 				},
 			})
+
 			ent2.child = true
 			ent2.tamed = true
 			ent2.owner = self.playername
@@ -138,35 +151,45 @@ local egg_VELOCITY = 19
 
 -- shoot egg
 local mobs_shoot_egg = function (item, player, pointed_thing)
+
 	local playerpos = player:getpos()
+
 	minetest.sound_play("default_place_node_hard", {
 		pos = playerpos,
 		gain = 1.0,
 		max_hear_distance = 5,
 	})
+
 	local obj = minetest.add_entity({
 		x = playerpos.x,
 		y = playerpos.y +1.5,
 		z = playerpos.z
 	}, "mobs:egg_entity")
+
 	local ent = obj:get_luaentity()
 	local dir = player:get_look_dir()
+
 	ent.velocity = egg_VELOCITY -- needed for api internal timing
 	ent.switch = 1 -- needed so that egg doesn't despawn straight away
+
 	obj:setvelocity({
 		x = dir.x * egg_VELOCITY,
 		y = dir.y * egg_VELOCITY,
 		z = dir.z * egg_VELOCITY
 	})
+
 	obj:setacceleration({
 		x = dir.x * -3,
 		y = -egg_GRAVITY,
 		z = dir.z * -3
 	})
+
 	-- pass player name to egg for chick ownership
 	local ent2 = obj:get_luaentity()
 	ent2.playername = player:get_player_name()
+
 	item:take_item()
+
 	return item
 end
 

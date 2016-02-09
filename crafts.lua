@@ -1,3 +1,4 @@
+
 -- nametag
 minetest.register_craftitem("mobs:nametag", {
 	description = "Nametag",

@@ -24,10 +24,8 @@ mobs:register_mob("mobs:cow", {
 	run_velocity = 2,
 	jump = true,
 	drops = {
-		{name = "mobs:meat_raw",
-		chance = 1, min = 1, max = 3},
-		{name = "mobs:leather",
-		chance = 1, min = 1, max = 2},
+		{name = "mobs:meat_raw", chance = 1, min = 1, max = 3},
+		{name = "mobs:leather", chance = 1, min = 1, max = 2},
 	},
 	water_damage = 1,
 	lava_damage = 5,
@@ -94,7 +92,8 @@ mobs:register_mob("mobs:cow", {
 	end,
 })
 
-mobs:register_spawn("mobs:cow", {"default:dirt_with_grass", "ethereal:green_dirt"}, 20, 10, 15000, 2, 31000)
+mobs:register_spawn("mobs:cow",
+	{"default:dirt_with_grass", "ethereal:green_dirt"}, 20, 10, 15000, 2, 31000, true)
 
 mobs:register_egg("mobs:cow", "Cow", "default_grass.png", 1)
 

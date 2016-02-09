@@ -32,12 +32,9 @@ mobs:register_mob("mobs:npc", {
 	run_velocity = 3,
 	jump = true,
 	drops = {
-		{name = "default:wood",
-		chance = 1, min = 1, max = 3},
-		{name = "default:apple",
-		chance = 2, min = 1, max = 2},
-		{name = "default:axe_stone",
-		chance = 5, min = 1, max = 1},
+		{name = "default:wood", chance = 1, min = 1, max = 3},
+		{name = "default:apple", chance = 2, min = 1, max = 2},
+		{name = "default:axe_stone", chance = 5, min = 1, max = 1},
 	},
 	water_damage = 0,
 	lava_damage = 2,
@@ -92,6 +89,7 @@ mobs:register_mob("mobs:npc", {
 
 		-- by right-clicking owner can switch npc between follow and stand
 		if self.owner and self.owner == clicker:get_player_name() then
+
 			if self.order == "follow" then
 				self.order = "stand"
 			else
@@ -103,5 +101,6 @@ mobs:register_mob("mobs:npc", {
 })
 
 --mobs:register_spawn("mobs:npc", {"default:dirt_with_grass"}, 20, 0, 7000, 1, 31000)
+--mobs:spawn_specific("mobs:npc", {"default:brick"}, {"air"}, 0, 15, 1, 1, 1, 0, 200, true)
 
 mobs:register_egg("mobs:npc", "Npc", "default_brick.png", 1)

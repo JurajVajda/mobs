@@ -1,4 +1,4 @@
--- Mobs Api (8th February 2016)
+-- Mobs Api (9th February 2016)
 mobs = {}
 mobs.mod = "redo"
 
@@ -1965,7 +1965,7 @@ end -- END mobs:register_mob function
 mobs.spawning_mobs = {}
 
 function mobs:spawn_specific(name, nodes, neighbors, min_light, max_light,
-	interval, chance, active_object_count, min_height, max_height)
+	interval, chance, active_object_count, min_height, max_height, day_toggle)
 
 	mobs.spawning_mobs[name] = true
 
@@ -1998,6 +1998,24 @@ function mobs:spawn_specific(name, nodes, neighbors, min_light, max_light,
 			if active_object_count_wider > active_object_count
 			or not mobs.spawning_mobs[name] then
 				return
+			end
+
+			-- if toggle set to nil then ignore day/night check
+			if day_toggle ~= nil then
+
+				local tod = (minetest.get_timeofday() or 0) * 24000
+
+				if tod > 4500 and tod < 19500 then
+					-- daylight, but mob wants night
+					if day_toggle == false then
+						return
+					end
+				else
+					-- night time but mob wants day
+					if day_toggle == true then
+						return
+					end
+				end
 			end
 
 			-- spawn above node
@@ -2059,10 +2077,10 @@ function mobs:spawn_specific(name, nodes, neighbors, min_light, max_light,
 end
 
 -- compatibility with older mob registration
-function mobs:register_spawn(name, nodes, max_light, min_light, chance, active_object_count, max_height)
+function mobs:register_spawn(name, nodes, max_light, min_light, chance, active_object_count, max_height, day_toggle)
 
 	mobs:spawn_specific(name, nodes, {"air"}, min_light, max_light, 30,
-		chance, active_object_count, -31000, max_height)
+		chance, active_object_count, -31000, max_height, day_toggle)
 end
 
 -- set content id's

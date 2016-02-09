@@ -26,12 +26,9 @@ mobs:register_mob("mobs:tree_monster", {
 	jump = true,
 	view_range = 15,
 	drops = {
-		{name = "ethereal:tree_sapling",
-		chance = 3, min = 1, max = 2},
-		{name = "ethereal:jungle_tree_sapling",
-		chance = 3, min = 1, max = 2},
-		{name = "default:apple",
-		chance = 2, min = 1, max=3},
+		{name = "ethereal:tree_sapling", chance = 3, min = 1, max = 2},
+		{name = "ethereal:jungle_tree_sapling", chance = 3, min = 1, max = 2},
+		{name = "default:apple", chance = 2, min = 1, max=3},
 	},
 	water_damage = 1,
 	lava_damage = 5,
@@ -51,7 +48,8 @@ mobs:register_mob("mobs:tree_monster", {
 	},
 })
 
-mobs:register_spawn("mobs:tree_monster", {"default:leaves", "default:jungleleaves"}, 7, 0, 7000, 2, 31000)
+mobs:register_spawn("mobs:tree_monster",
+	{"default:leaves", "default:jungleleaves"}, 7, 0, 7000, 2, 31000, true)
 
 mobs:register_egg("mobs:tree_monster", "Tree Monster", "default_tree_top.png", 1)
 

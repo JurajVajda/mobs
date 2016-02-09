@@ -20,8 +20,7 @@ mobs:register_mob("mobs:bee", {
 	walk_velocity = 1,
 	jump = true,
 	drops = {
-		{name = "mobs:honey",
-		chance = 1, min = 1, max = 2},
+		{name = "mobs:honey", chance = 1, min = 1, max = 2},
 	},
 	water_damage = 1,
 	lava_damage = 1,
@@ -40,7 +39,7 @@ mobs:register_mob("mobs:bee", {
 	end,
 })
 
-mobs:register_spawn("mobs:bee", {"group:flower"}, 20, 10, 9000, 2, 31000)
+mobs:register_spawn("mobs:bee", {"group:flower"}, 20, 10, 9000, 2, 31000, true)
 
 mobs:register_egg("mobs:bee", "Bee", "mobs_bee_inv.png", 0)
 
@@ -63,9 +62,13 @@ minetest.register_node("mobs:beehive", {
 	walkable = true,
 	groups = {oddly_breakable_by_hand = 3},
 	sounds = default.node_sound_defaults(),
+
 	after_place_node = function(pos, placer, itemstack)
+
 		if placer:is_player() then
+
 			minetest.set_node(pos, {name = "mobs:beehive", param2 = 1})
+
 			if math.random(1, 5) == 1 then
 				minetest.add_entity(pos, "mobs:bee")
 			end

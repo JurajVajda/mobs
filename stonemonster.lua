@@ -20,7 +20,7 @@ mobs:register_mob("mobs:stone_monster", {
 	sounds = {
 		random = "mobs_stonemonster",
 	},
-	walk_velocity = 0.5,
+	walk_velocity = 1,
 	run_velocity = 2,
 	jump = true,
 	floats = 0,
