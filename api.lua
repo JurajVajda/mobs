@@ -1,4 +1,4 @@
--- Mobs Api (9th February 2016)
+-- Mobs Api (13th February 2016)
 mobs = {}
 mobs.mod = "redo"
 
@@ -12,6 +12,7 @@ local remove_far = minetest.setting_getbool("remove_far_mobs")
 
 -- pathfinding settings
 local enable_pathfinding = true
+local enable_pathfind_digging = false
 local stuck_timeout = 5 -- how long before mob gets stuck in place and starts searching
 local stuck_path_timeout = 15 -- how long will mob follow path before giving up
 
@@ -39,6 +40,8 @@ do_attack = function(self, player)
 end
 
 set_velocity = function(self, v)
+
+	v = v or 0
 
 	local yaw = (self.object:getyaw() + self.rotate) or 0
 
@@ -656,6 +659,153 @@ function day_docile(self)
 	and self.time_of_day < 0.8 then
 
 		return true
+	end
+end
+
+-- path finding and smart mob routine by rnd
+function smart_mobs(self, s, p, dist, dtime)
+
+	local s1 = self.path.lastpos
+
+	-- is it becoming stuck?
+	if math.abs(s1.x - s.x) + math.abs(s1.z - s.z) < 1.5 then
+		self.path.stuck_timer = self.path.stuck_timer + dtime
+	else
+		self.path.stuck_timer = 0
+	end
+
+	self.path.lastpos = {x = s.x, y = s.y, z = s.z}
+
+	-- im stuck, search for path
+	if (self.path.stuck_timer > stuck_timeout)
+	or (self.path.stuck_timer > stuck_path_timeout
+	and self.path.following) then
+
+		self.path.stuck_timer = 0
+
+		-- lets try find a path, first take care of positions
+		-- since pathfinder is very sensitive
+		local sheight = self.collisionbox[5] - self.collisionbox[2]
+
+		-- round position to center of node to avoid stuck in walls
+		-- also adjust height for player models!
+		s.x = math.floor(s.x + 0.5)
+		s.y = math.floor(s.y + 0.5) - sheight
+		s.z = math.floor(s.z + 0.5)
+
+		local ssight, sground
+		ssight, sground = minetest.line_of_sight(s, {
+			x = s.x, y = s.y - 4, z = s.z}, 1)
+
+		-- determine node above ground
+		if not ssight then
+			s.y = sground.y + 1
+		end
+
+		local p1 = self.attack:getpos()
+
+		p1.x = math.floor(p1.x + 0.5)
+		p1.y = math.floor(p1.y + 0.5)
+		p1.z = math.floor(p1.z + 0.5)
+
+		self.path.way = minetest.find_path(s, p1, 16, 2, 6, "Dijkstra") --"A*_noprefetch")
+
+		-- no path found, try something else
+		if not self.path.way then
+
+			self.path.following = false
+			self.path.stuck = true
+
+			 -- lets make way by digging/building if not accessible
+			if enable_pathfind_digging then
+
+				 -- add block and remove one block above so
+				 -- there is room to jump if needed
+				if s.y < p.y then
+
+					if not minetest.is_protected(s, "") then
+						minetest.set_node(s, {name = "default:dirt"})
+					end
+
+					local sheight = math.ceil(self.collisionbox[5]) + 1
+
+					-- assume mob is 2 blocks high so it digs above its head
+					s.y = s.y + sheight
+
+					if not minetest.is_protected(s, "") then
+
+						local node1 = minetest.get_node(s).name
+
+						if node1 ~= "air"
+						and node1 ~= "ignore" then
+							minetest.set_node(s, {name = "air"})
+							minetest.add_item(s, ItemStack(node1))
+						end
+					end
+
+					s.y = s.y - sheight
+					self.object:setpos({x = s.x, y = s.y + 2, z = s.z})
+
+				else -- dig 2 blocks to make door toward player direction
+
+					local yaw1 = self.object:getyaw()+ pi / 2
+
+					local p1 = {
+						x = s.x + math.cos(yaw1),
+						y = s.y,
+						z = s.z + math.sin(yaw1)
+					}
+
+					if not minetest.is_protected(p1, "") then
+
+						local node1 = minetest.get_node(p1).name
+
+						if node1 ~= "air"
+						and node1 ~= "ignore" then
+							minetest.add_item(p1, ItemStack(node1))
+							minetest.set_node(p1, {name = "air"})
+						end
+
+						p1.y = p1.y + 1
+						node1 = minetest.get_node(p1).name
+
+						if node1 ~= "air"
+						and node1 ~= "ignore" then
+							minetest.add_item(p1, ItemStack(node1))
+							minetest.set_node(p1, {name = "air"})
+						end
+
+					end
+				end
+			end
+
+			-- will try again in 1 second
+			self.path.stuck_timer = stuck_timeout - 1
+
+			-- frustration! cant find the damn path :(
+			if self.sounds.random then
+				minetest.sound_play(self.sounds.random, {
+					object = self.object,
+					max_hear_distance = self.sounds.distance
+				})
+			end
+
+		else
+
+			-- yay i found path
+			if self.sounds.attack then
+
+				set_velocity(self, self.walk_velocity)
+
+				minetest.sound_play(self.sounds.attack, {
+					object = self.object,
+					max_hear_distance = self.sounds.distance
+				})
+			end
+
+			-- follow path now that it has it
+			self.path.following = true
+		end
 	end
 end
 
@@ -1439,23 +1589,25 @@ minetest.register_entity(name, {
 			end
 
 			-- rnd: new movement direction
-			if self.path.stuck
-			and self.path.way then
+			if self.path.following
+			and self.path.way
+			and self.attack_type ~= "dogshoot" then
 
 				-- no paths longer than 50
-				if #self.path.way > 50 then
-					self.path.stuck = false
+				if #self.path.way > 50
+				or dist < self.reach then
+					self.path.following = false
 					return
 				end
 
 				local p1 = self.path.way[1]
 
 				if not p1 then
-					self.path.stuck = false
+					self.path.following = false
 					return
 				end
 
-				if math.abs(p1.x-s.x) + math.abs(p1.z - s.z) < 0.75 then
+				if math.abs(p1.x-s.x) + math.abs(p1.z - s.z) < 0.6 then
 					-- reached waypoint, remove it from queue
 					table.remove(self.path.way, 1)
 				end
@@ -1485,85 +1637,10 @@ minetest.register_entity(name, {
 			-- move towards enemy if beyond mob reach
 			if dist > self.reach then
 
-				-- PATH FINDING by rnd
+				-- path finding by rnd
 				if enable_pathfinding then
-
-				local s1 = self.path.lastpos
-
-				if math.abs(s1.x - s.x) + math.abs(s1.z - s.z) < 2 then
-
-					-- rnd: almost standing still, to do: insert path finding here
-					self.path.stuck_timer = self.path.stuck_timer + dtime
-				else
-					self.path.stuck_timer = 0
+					smart_mobs(self, s, p, dist, dtime)
 				end
-
-				self.path.lastpos = {x = s.x, y = s.y, z = s.z}
-
-				if (self.path.stuck_timer > stuck_timeout and not self.path.stuck)
-				or (self.path.stuck_timer > stuck_path_timeout and self.path.stuck) then
-
-					-- im stuck, search for path
-					self.path.stuck = true
-
-					local sheight = self.collisionbox[5] - self.collisionbox[2]
-
-					-- round position to center of node to avoid stuck in walls,
-					-- also adjust height for player models!
-					s.x = math.floor(s.x + 0.5)
-					s.y = math.floor(s.y + 0.5) - sheight
-					s.z = math.floor(s.z + 0.5)
-
-					local ssight, sground
-
-					ssight, sground = minetest.line_of_sight(s,
-						{x = s.x, y = s. y - 4, z = s.z}, 1)
-
-					-- determine node above ground
-					if not ssight then
-						s.y = sground.y + 1
-					end
-
-					--minetest.chat_send_all("stuck at " .. s.x .." " .. s.y .. " " .. s.z .. ", calculating path")
-
-					local p1 = self.attack:getpos()
-
-					p1.x = math.floor(p1.x + 0.5)
-					p1.y = math.floor(p1.y + 0.5)
-					p1.z = math.floor(p1.z + 0.5)
-
-					--minetest.find_path(pos1, pos2, searchdistance, max_jump, max_drop, algorithm)
-
-					self.path.way = minetest.find_path(s, p1, 16, 2, 6, "A*_noprefetch")
-
-					if not self.path.way then
-
-						self.path.stuck = false
-
-						-- can't find path, play sound
-						if self.sounds.random then
-						minetest.sound_play(self.sounds.random, {
-							object = self.object,
-							max_hear_distance = self.sounds.distance
-						})
-						end
-					else
-						-- found path, play sound
-						if self.sounds.attack then
-						minetest.sound_play(self.sounds.attack, {
-							object = self.object,
-							max_hear_distance = self.sounds.distance
-						})
-						end
-
-						--minetest.chat_send_all("found path with length " .. #self.path.way);
-					end
-
-					self.path.stuck_timer = 0
-
-				end -- END  if pathfinding enabled
-				end
-				-- END PATH FINDING
 
 				-- jump attack
 				if (self.jump
@@ -1580,11 +1657,21 @@ minetest.register_entity(name, {
 					set_velocity(self, 0)
 					set_animation(self, "stand")
 				else
-					set_velocity(self, self.run_velocity)
+
+					if self.path.stuck then
+						set_velocity(self, self.walk_velocity)
+					else
+						set_velocity(self, self.run_velocity)
+					end
+
 					set_animation(self, "run")
 				end
 
-			else
+			else -- rnd: if inside reach range
+
+				self.path.stuck = false
+				self.path.stuck_timer = 0
+				self.path.following = false -- not stuck anymore
 
 				set_velocity(self, 0)
 				set_animation(self, "punch")
@@ -1609,9 +1696,6 @@ minetest.register_entity(name, {
 								max_hear_distance = self.sounds.distance
 							})
 						end
-
-						-- rnd: not stuck
-						self.path.stuck = false
 
 						-- punch player
 						self.attack:punch(self.object, 1.0, {
@@ -1896,6 +1980,7 @@ minetest.register_entity(name, {
 		self.path.way = {} -- path to follow, table of positions
 		self.path.lastpos = {x = 0, y = 0, z = 0}
 		self.path.stuck = false
+		self.path.following = false -- currently following path?
 		self.path.stuck_timer = 0 -- if stuck for too long search for path
 		-- end init
 
