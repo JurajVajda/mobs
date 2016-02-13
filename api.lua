@@ -13,8 +13,8 @@ local remove_far = minetest.setting_getbool("remove_far_mobs")
 -- pathfinding settings
 local enable_pathfinding = true
 local enable_pathfind_digging = false
-local stuck_timeout = 5 -- how long before mob gets stuck in place and starts searching
-local stuck_path_timeout = 15 -- how long will mob follow path before giving up
+local stuck_timeout = 3 -- how long before mob gets stuck in place and starts searching
+local stuck_path_timeout = 10 -- how long will mob follow path before giving up
 
 -- internal functions
 
@@ -677,7 +677,7 @@ function smart_mobs(self, s, p, dist, dtime)
 	self.path.lastpos = {x = s.x, y = s.y, z = s.z}
 
 	-- im stuck, search for path
-	if (self.path.stuck_timer > stuck_timeout)
+	if (self.path.stuck_timer > stuck_timeout and not self.path.following)
 	or (self.path.stuck_timer > stuck_path_timeout
 	and self.path.following) then
 
@@ -710,18 +710,28 @@ function smart_mobs(self, s, p, dist, dtime)
 
 		self.path.way = minetest.find_path(s, p1, 16, 2, 6, "Dijkstra") --"A*_noprefetch")
 
+		-- attempt to unstick mob that is "daydreaming"
+		self.object:setpos({
+			x = s.x + 0.1 * (math.random() * 2 - 1),
+			y = s.y + 1,
+			z = s.z + 0.1 * (math.random() * 2 - 1)
+		})
+
+		self.state = ""
+		do_attack(self, self.attack)
+
 		-- no path found, try something else
 		if not self.path.way then
 
 			self.path.following = false
-			self.path.stuck = true
+--			self.path.stuck = true
 
 			 -- lets make way by digging/building if not accessible
 			if enable_pathfind_digging then
 
 				 -- add block and remove one block above so
 				 -- there is room to jump if needed
-				if s.y < p.y then
+				if s.y < p1.y then
 
 					if not minetest.is_protected(s, "") then
 						minetest.set_node(s, {name = "default:dirt"})
@@ -748,7 +758,7 @@ function smart_mobs(self, s, p, dist, dtime)
 
 				else -- dig 2 blocks to make door toward player direction
 
-					local yaw1 = self.object:getyaw()+ pi / 2
+					local yaw1 = self.object:getyaw() + pi / 2
 
 					local p1 = {
 						x = s.x + math.cos(yaw1),
@@ -779,8 +789,8 @@ function smart_mobs(self, s, p, dist, dtime)
 				end
 			end
 
-			-- will try again in 1 second
-			self.path.stuck_timer = stuck_timeout - 1
+			-- will try again in 2 second
+			self.path.stuck_timer = stuck_timeout - 2
 
 			-- frustration! cant find the damn path :(
 			if self.sounds.random then
