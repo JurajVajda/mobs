@@ -942,7 +942,7 @@ minetest.register_entity(name, {
 			end
 
 			-- in water then float up
-			if minetest.registered_nodes[node_ok(pos).name].groups.water then
+			if minetest.registered_nodes[node_ok(pos).name].groups.liquid then -- water then
 
 				if self.floats == 1 then
 

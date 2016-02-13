@@ -31,7 +31,7 @@ mobs:register_mob("mobs:dirt_monster", {
 	water_damage = 1,
 	lava_damage = 5,
 	light_damage = 2,
-	fear_height = 3,
+	fear_height = 4,
 	animation = {
 		speed_normal = 15,
 		speed_run = 15,

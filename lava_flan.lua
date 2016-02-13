@@ -26,7 +26,7 @@ mobs:register_mob("mobs:lava_flan", {
 	run_velocity = 2,
 	jump = true,
 	view_range = 10,
-	floats = 0,
+	floats = 1,
 	drops = {
 		{name = "mobs:lava_orb", chance = 15, min = 1, max = 1},
 	},
