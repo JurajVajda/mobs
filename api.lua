@@ -2600,7 +2600,7 @@ function mobs:feed_tame(self, clicker, feed_count, breed, tame)
 		local formspec = "size[8,4]"
 			.. default.gui_bg
 			.. default.gui_bg_img
-			.. "field[0.5,1;7.5,0;name;Enter name and press button:;" .. tag .. "]"
+			.. "field[0.5,1;7.5,0;name;Enter name:;" .. tag .. "]"
 			.. "button_exit[2.5,3.5;3,1;mob_rename;Rename]"
 			minetest.show_formspec(name, "mobs_nametag", formspec)
 	end
@@ -2612,30 +2612,29 @@ end
 -- inspired by blockmen's nametag mod
 minetest.register_on_player_receive_fields(function(player, formname, fields)
 
-	-- right-clicked with nametag, name entered and button pressed?
+	-- right-clicked with nametag and name entered?
 	if formname == "mobs_nametag"
-	and fields.mob_rename
+	and fields.name
 	and fields.name ~= "" then
 
 		local name = player:get_player_name()
-		local ent = mob_obj[name]
 
-		if not ent
-		or not ent.object then
+		if not mob_obj[name]
+		or not mob_obj[name].object then
 			return
 		end
 
 		-- update nametag
-		ent.nametag = fields.name
-		update_tag(ent)
+		mob_obj[name].nametag = fields.name
+
+		update_tag(mob_obj[name])
 
 		-- if not in creative then take item
 		if not creative then
 
-			local itemstack = mob_sta[name]
+			mob_sta[name]:take_item()
 
-			itemstack:take_item()
-			player:set_wielded_item(itemstack)
+			player:set_wielded_item(mob_sta[name])
 		end
 
 		-- reset external variables
