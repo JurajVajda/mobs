@@ -1,4 +1,4 @@
--- Mobs Api (13th February 2016)
+-- Mobs Api (15th February 2016)
 mobs = {}
 mobs.mod = "redo"
 
@@ -1784,6 +1784,9 @@ minetest.register_entity(name, {
 
 	on_punch = function(self, hitter, tflp, tool_capabilities, dir)
 
+		-- direction error check
+		dir = dir or {x = 0, y = 0, z = 0}
+
 		-- weapon wear
 		local weapon = hitter:get_wielded_item()
 		local punch_interval = 1.4
@@ -1845,9 +1848,9 @@ minetest.register_entity(name, {
 			end
 
 			self.object:setvelocity({
-				x = (dir.x or 0) * kb,
+				x = dir.x * kb,
 				y = up,
-				z = (dir.z or 0) * kb
+				z = dir.z * kb
 			})
 
 			self.pause_timer = r
