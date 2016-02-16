@@ -1,4 +1,4 @@
--- Mobs Api (15th February 2016)
+-- Mobs Api (16th February 2016)
 mobs = {}
 mobs.mod = "redo"
 
@@ -633,6 +633,7 @@ function replace(self, pos)
 -- print ("replace node = ".. minetest.get_node(pos).name, pos.y)
 
 		if self.replace_what
+		and self.replace_with
 		and self.object:getvelocity().y == 0
 		and #minetest.find_nodes_in_area(pos, pos, self.replace_what) > 0 then
 
