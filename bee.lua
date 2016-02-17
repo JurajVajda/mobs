@@ -20,10 +20,10 @@ mobs:register_mob("mobs:bee", {
 	walk_velocity = 1,
 	jump = true,
 	drops = {
-		{name = "mobs:honey", chance = 1, min = 1, max = 2},
+		{name = "mobs:honey", chance = 2, min = 1, max = 2},
 	},
-	water_damage = 1,
-	lava_damage = 1,
+	water_damage = 2,
+	lava_damage = 2,
 	light_damage = 0,
 	fall_damage = 0,
 	fall_speed = -3,
@@ -60,8 +60,22 @@ minetest.register_node("mobs:beehive", {
 	paramtype = "light",
 	sunlight_propagates = true,
 	walkable = true,
-	groups = {oddly_breakable_by_hand = 3},
+	groups = {oddly_breakable_by_hand = 3, flammable = 1},
 	sounds = default.node_sound_defaults(),
+
+	on_construct = function(pos)
+
+		local meta = minetest.get_meta(pos)
+
+		meta:set_string("formspec", "size[8,6]"
+			..default.gui_bg..default.gui_bg_img..default.gui_slots
+			.. "image[3,0.8;0.8,0.8;mobs_bee_inv.png]"
+			.. "list[current_name;beehive;4,0.5;1,1;]"
+			.. "list[current_player;main;0,2.35;8,4;]"
+			.. "listring[]")
+
+		meta:get_inventory():set_size("beehive", 1)
+	end,
 
 	after_place_node = function(pos, placer, itemstack)
 
@@ -69,12 +83,35 @@ minetest.register_node("mobs:beehive", {
 
 			minetest.set_node(pos, {name = "mobs:beehive", param2 = 1})
 
-			if math.random(1, 5) == 1 then
+			if math.random(1, 4) == 1 then
 				minetest.add_entity(pos, "mobs:bee")
 			end
 		end
 	end,
-	
+
+	on_punch = function(pos, node, puncher)
+
+		-- yep, bee's don't like having their home punched by players
+		puncher:set_hp(puncher:get_hp() - 4)
+	end,
+
+	allow_metadata_inventory_put = function(pos, listname, index, stack, player)
+
+		if listname == "beehive" then
+			return 0
+		end
+
+		return stack:get_count()
+	end,
+
+	can_dig = function(pos,player)
+
+		local meta = minetest.get_meta(pos)
+
+		-- only dig beehive if no honey inside
+		return meta:get_inventory():is_empty("beehive")
+	end,
+
 })
 
 minetest.register_craft({
@@ -106,4 +143,35 @@ minetest.register_craft({
 	recipe = {
 		{"mobs:honey_block"},
 	}
+})
+
+-- beehive workings
+minetest.register_abm({
+	nodenames = {"mobs:beehive"},
+	interval = 4,
+	chance = 4,
+	catch_up = false,
+	action = function(pos, node)
+
+		-- bee's only make honey during the day
+		local tod = (minetest.get_timeofday() or 0) * 24000
+
+		if tod < 4500 or tod > 19500 then
+			return
+		end
+
+		-- find flowers in area around hive
+		local flowers = minetest.find_nodes_in_area_under_air(
+			{x = pos.x - 12, y = pos.y - 6, z = pos.z - 12},
+			{x = pos.x + 12, y = pos.y + 6, z = pos.z + 12},
+			"group:flower")
+
+		-- no flowers no honey, nuff said!
+		if #flowers > 3 then
+
+			local meta = minetest.get_meta(pos)
+
+			meta:get_inventory():add_item("beehive", "mobs:honey")
+		end
+	end
 })
