@@ -5,6 +5,7 @@ mobs:register_mob("mobs:oerkki", {
 	type = "monster",
 	passive = false,
 	attack_type = "dogfight",
+	pathfinding = true,
 	reach = 2,
 	damage = 4,
 	hp_min = 8,
