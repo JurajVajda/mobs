@@ -148,8 +148,8 @@ minetest.register_craft({
 -- beehive workings
 minetest.register_abm({
 	nodenames = {"mobs:beehive"},
-	interval = 4,
-	chance = 4,
+	interval = 6,
+	chance = 5,
 	catch_up = false,
 	action = function(pos, node)
 
@@ -162,8 +162,8 @@ minetest.register_abm({
 
 		-- find flowers in area around hive
 		local flowers = minetest.find_nodes_in_area_under_air(
-			{x = pos.x - 12, y = pos.y - 6, z = pos.z - 12},
-			{x = pos.x + 12, y = pos.y + 6, z = pos.z + 12},
+			{x = pos.x - 10, y = pos.y - 5, z = pos.z - 10},
+			{x = pos.x + 10, y = pos.y + 5, z = pos.z + 10},
 			"group:flower")
 
 		-- no flowers no honey, nuff said!
@@ -171,7 +171,10 @@ minetest.register_abm({
 
 			local meta = minetest.get_meta(pos)
 
-			meta:get_inventory():add_item("beehive", "mobs:honey")
+			-- error check just incase it's an old beehive
+			if meta then
+				meta:get_inventory():add_item("beehive", "mobs:honey")
+			end
 		end
 	end
 })
