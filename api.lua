@@ -134,10 +134,8 @@ function line_of_sight_water(self, pos1, pos2, stepsize)
 
 	local s, pos_w = minetest.line_of_sight(pos1, pos2, stepsize)
 
-	-- normal walking mobs can see you
-	if s == true
-	and not self.fly then
-
+	-- normal walking and flying mobs can see you through air
+	if s == true then
 		return true
 	end
 
