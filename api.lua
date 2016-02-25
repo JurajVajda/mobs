@@ -1737,7 +1737,8 @@ minetest.register_entity(name, {
 					p2.y = p2.y + 1.5
 					s2.y = s2.y + 1.5
 
-					if minetest.line_of_sight(p2, s2) == true then
+					--if minetest.line_of_sight(p2, s2) == true then
+					if line_of_sight_water(self, p2, s2) == true then
 
 						-- play attack sound
 						if self.sounds.attack then
