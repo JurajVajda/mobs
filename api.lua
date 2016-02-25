@@ -315,6 +315,24 @@ local function is_at_cliff(self)
 	return false
 end
 
+-- get node but use fallback for nil or unknown
+local function node_ok(pos, fallback)
+
+	fallback = fallback or "default:dirt"
+
+	local node = minetest.get_node_or_nil(pos)
+
+	if not node then
+		return minetest.registered_nodes[fallback]
+	end
+
+	if minetest.registered_nodes[node.name] then
+		return node
+	end
+
+	return minetest.registered_nodes[fallback]
+end
+
 -- environmental damage (water, lava, fire, light)
 do_env_damage = function(self)
 
@@ -345,13 +363,15 @@ do_env_damage = function(self)
 		effect(pos, 5, "tnt_smoke.png")
 	end
 
+	-- what is mob standing in?
+	pos.y = pos.y + self.collisionbox[2] + 0.1 -- foot level
+	self.standing_in = node_ok(pos, "air").name
+	--print ("standing in " .. self.standing_in)
+
 	if self.water_damage ~= 0
 	or self.lava_damage ~= 0 then
 
-		pos.y = pos.y + self.collisionbox[2] + 0.1 -- foot level
-
-		local nod = node_ok(pos, "air") ;  --print ("standing in "..nod.name)
-		local nodef = minetest.registered_nodes[nod.name]
+		local nodef = minetest.registered_nodes[self.standing_in]
 
 		pos.y = pos.y + 1
 
@@ -367,8 +387,8 @@ do_env_damage = function(self)
 		-- lava or fire
 		if self.lava_damage ~= 0
 		and (nodef.groups.lava
-		or nod.name == "fire:basic_flame"
-		or nod.name == "fire:permanent_flame") then
+		or self.standing_in == "fire:basic_flame"
+		or self.standing_in == "fire:permanent_flame") then
 
 			self.object:set_hp(self.object:get_hp() - self.lava_damage)
 
@@ -472,24 +492,6 @@ function entity_physics(pos, radius)
 		local damage = math.floor((4 / dist) * radius)
 		obj:set_hp(obj:get_hp() - damage)
 	end
-end
-
--- get node but use fallback for nil or unknown
-function node_ok(pos, fallback)
-
-	fallback = fallback or "default:dirt"
-
-	local node = minetest.get_node_or_nil(pos)
-
-	if not node then
-		return minetest.registered_nodes[fallback]
-	end
-
-	if minetest.registered_nodes[node.name] then
-		return node
-	end
-
-	return minetest.registered_nodes[fallback]
 end
 
 -- should mob follow what I'm holding ?
@@ -1294,6 +1296,19 @@ minetest.register_entity(name, {
 			end
 		end
 
+		-- water swimmers flop when on land
+		if self.fly
+		and self.fly_in == "default:water_source"
+		and self.standing_in ~= self.fly_in then
+
+			self.state = "flop"
+			self.object:setvelocity({x = 0, y = -5, z = 0})
+
+			set_animation(self, "stand")
+
+			return
+		end
+
 		if self.state == "stand" then
 
 			if math.random(1, 4) == 1 then
@@ -1356,32 +1371,10 @@ minetest.register_entity(name, {
 				end
 			end
 
-		elseif self.state == "walk" or self.state == "flop" then
-
-			-- water swimmers cannot move out of water
-			if self.state == "flop" then
-
-				self.object:setvelocity({x = 0, y = -5, z = 0})
-
-				return
-			end
+		elseif self.state == "walk" then
 
 			local s = self.object:getpos()
 			local lp = minetest.find_node_near(s, 1, {"group:water"})
-
-			-- water swimmers flop onto the ground when out of water
-			if self.fly
-			and self.fly_in == "default:water_source"
-			and not lp then
-
-				self.object:setvelocity({x = 0, y = -5, z = 0})
-
-				-- change to 'flop' state so nothing more happens
-				self.state = "flop"
-				set_animation(self, "stand")
-
-				return
-			end
 
 			-- if water nearby then turn away
 			if lp then
@@ -2048,6 +2041,7 @@ minetest.register_entity(name, {
 		self.mesh = mesh
 		self.collisionbox = colbox
 		self.visual_size = vis_size
+		self.standing_in = ""
 
 		-- set anything changed above
 		self.object:set_properties(self)
