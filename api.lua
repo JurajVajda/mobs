@@ -1,4 +1,4 @@
--- Mobs Api (17th February 2016)
+-- Mobs Api (25th February 2016)
 mobs = {}
 mobs.mod = "redo"
 
@@ -127,6 +127,36 @@ set_animation = function(self, type)
 			self.animation.current = "punch"
 		end
 	end
+end
+
+-- check line of sight for walkers and swimmers alike
+function line_of_sight_water(self, pos1, pos2, stepsize)
+
+	local s, pos_w = minetest.line_of_sight(pos1, pos2, stepsize)
+
+	-- normal walking mobs can see you
+	if s == true
+	and not self.fly then
+
+		return true
+	end
+
+	-- swimming mobs can see you through water
+	if s == false
+	and self.fly
+	and self.fly_in == "default:water_source" then
+
+		local nod = minetest.get_node(pos_w).name
+
+		if nod == "default:water_source"
+		or nod == "default:water_flowing" then
+
+			return true
+		end
+	end
+
+	return false
+
 end
 
 -- particle effects
@@ -1098,7 +1128,8 @@ minetest.register_entity(name, {
 					-- field of view check goes here
 
 						-- choose closest player to attack
-						if minetest.line_of_sight(sp, p, 2) == true
+						--if minetest.line_of_sight(sp, p, 2) == true
+						if line_of_sight_water(self, sp, p, 2) == true
 						and dist < min_dist then
 							min_dist = dist
 							min_player = player
@@ -1325,21 +1356,27 @@ minetest.register_entity(name, {
 				end
 			end
 
-		elseif self.state == "walk" then
+		elseif self.state == "walk" or self.state == "flop" then
+
+			-- water swimmers cannot move out of water
+			if self.state == "flop" then
+
+				self.object:setvelocity({x = 0, y = -5, z = 0})
+
+				return
+			end
 
 			local s = self.object:getpos()
 			local lp = minetest.find_node_near(s, 1, {"group:water"})
 
-			-- water swimmers cannot move out of water
+			-- water swimmers flop onto the ground when out of water
 			if self.fly
 			and self.fly_in == "default:water_source"
 			and not lp then
 
-				--print ("out of water")
+				self.object:setvelocity({x = 0, y = -5, z = 0})
 
-				set_velocity(self, 0)
-
-				-- change to undefined state so nothing more happens
+				-- change to 'flop' state so nothing more happens
 				self.state = "flop"
 				set_animation(self, "stand")
 
@@ -1847,7 +1884,8 @@ minetest.register_entity(name, {
 			local up = 2
 
 			-- if already in air then dont go up anymore when hit
-			if v.y > 0 then
+			if v.y > 0
+			or self.fly then
 				up = 0
 			end
 
@@ -1891,14 +1929,13 @@ minetest.register_entity(name, {
 
 		-- attack puncher and call other mobs for help
 		if self.passive == false
+		and self.state ~= "flop"
 		and self.child == false
 		and hitter:get_player_name() ~= self.owner then
 
-			--if self.state ~= "attack" then
-				-- attack whoever punched mob
-				self.state = ""
-				do_attack(self, hitter)
-			--end
+			-- attack whoever punched mob
+			self.state = ""
+			do_attack(self, hitter)
 
 			-- alert others to the attack
 			local obj = nil
