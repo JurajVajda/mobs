@@ -1,4 +1,4 @@
--- Mobs Api (25th February 2016)
+-- Mobs Api (27th February 2016)
 mobs = {}
 mobs.mod = "redo"
 
@@ -20,6 +20,16 @@ local stuck_path_timeout = 10 -- how long will mob follow path before giving up
 
 local pi = math.pi
 local square = math.sqrt
+local atan = function(x)
+
+	if x ~= x then
+		--error("atan bassed NaN")
+		print ("atan based NaN")
+		return 0
+	else
+		return math.atan(x)
+	end
+end
 
 do_attack = function(self, player)
 
@@ -1257,7 +1267,7 @@ minetest.register_entity(name, {
 					if vec.x ~= 0
 					and vec.z ~= 0 then
 
-						yaw = (math.atan(vec.z / vec.x) + pi / 2) - self.rotate
+						yaw = (atan(vec.z / vec.x) + pi / 2) - self.rotate
 
 						if p.x > s.x then
 							yaw = yaw + pi
@@ -1339,7 +1349,7 @@ minetest.register_entity(name, {
 					if vec.x ~= 0
 					and vec.z ~= 0 then
 
-						yaw = (math.atan(vec.z / vec.x) + pi / 2) - self.rotate
+						yaw = (atan(vec.z / vec.x) + pi / 2) - self.rotate
 
 						if lp.x > s.x then
 							yaw = yaw + pi
@@ -1386,7 +1396,7 @@ minetest.register_entity(name, {
 				if vec.x ~= 0
 				and vec.z ~= 0 then
 
-					yaw = math.atan(vec.z / vec.x) + 3 * pi / 2 - self.rotate
+					yaw = atan(vec.z / vec.x) + 3 * pi / 2 - self.rotate
 
 					if lp.x > s.x then
 						yaw = yaw + pi
@@ -1488,7 +1498,7 @@ minetest.register_entity(name, {
 			if vec.x ~= 0
 			and vec.z ~= 0 then
 
-				yaw = math.atan(vec.z / vec.x) + pi / 2 - self.rotate
+				yaw = atan(vec.z / vec.x) + pi / 2 - self.rotate
 
 				if p.x > s.x then
 					yaw = yaw + pi
@@ -1665,7 +1675,7 @@ minetest.register_entity(name, {
 			if vec.x ~= 0
 			and vec.z ~= 0 then
 
-				yaw = (math.atan(vec.z / vec.x) + pi / 2) - self.rotate
+				yaw = (atan(vec.z / vec.x) + pi / 2) - self.rotate
 
 				if p.x > s.x then
 					yaw = yaw + pi
@@ -1765,7 +1775,7 @@ minetest.register_entity(name, {
 			if vec.x ~= 0
 			and vec.z ~= 0 then
 
-				yaw = (math.atan(vec.z / vec.x) + pi / 2) - self.rotate
+				yaw = (atan(vec.z / vec.x) + pi / 2) - self.rotate
 
 				if p.x > s.x then
 					yaw = yaw + pi
@@ -1905,7 +1915,7 @@ minetest.register_entity(name, {
 			if vec.x ~= 0
 			and vec.z ~= 0 then
 
-				local yaw = math.atan(vec.z / vec.x) + 3 * pi / 2 - self.rotate
+				local yaw = atan(vec.z / vec.x) + 3 * pi / 2 - self.rotate
 
 				if lp.x > s.x then
 					yaw = yaw + pi
