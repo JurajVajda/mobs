@@ -1,4 +1,4 @@
--- Mobs Api (27th February 2016)
+-- Mobs Api (2nd March 2016)
 mobs = {}
 mobs.mod = "redo"
 
@@ -2282,6 +2282,11 @@ function mobs:explosion(pos, radius, fire, smoke, sound)
 		and data[vi] ~= c_chest then
 
 			local n = node_ok(p).name
+			local on_blast = minetest.registered_nodes[n].on_blast
+
+			if on_blast then
+				return on_blast(p)
+			end
 
 			if minetest.get_item_group(n, "unbreakable") ~= 1 then
 
