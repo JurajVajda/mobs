@@ -2438,7 +2438,7 @@ function mobs:register_egg(mob, desc, background, addegg)
 	local invimg = background
 
 	if addegg == 1 then
-		invimg = invimg .. "^mobs_chicken_egg.png"
+		invimg = "mobs_chicken_egg.png^(" .. invimg .. "^[mask:mobs_chicken_egg_overlay.png)"
 	end
 
 	minetest.register_craftitem(mob, {
