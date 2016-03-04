@@ -1,5 +1,5 @@
 
--- Lava Flan by Zeg9
+-- Lava Flan by Zeg9 (additional textures by JurajVajda)
 
 mobs:register_mob("mobs:lava_flan", {
 	type = "monster",
@@ -15,6 +15,8 @@ mobs:register_mob("mobs:lava_flan", {
 	mesh = "zmobs_lava_flan.x",
 	textures = {
 		{"zmobs_lava_flan.png"},
+		{"zmobs_lava_flan2.png"},
+		{"zmobs_lava_flan3.png"},
 	},
 	blood_texture = "fire_basic_flame.png",
 	makes_footstep_sound = false,
