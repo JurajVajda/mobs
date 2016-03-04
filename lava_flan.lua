@@ -63,3 +63,76 @@ minetest.register_craftitem("mobs:lava_orb", {
 })
 
 minetest.register_alias("zmobs:lava_orb", "mobs:lava_orb")
+
+minetest.register_craft({
+	type = "fuel",
+	recipe = "mobs:lava_orb",
+	burntime = 80,
+})
+
+-- Lava Pick (digs and smelts at same time)
+
+local old_handle_node_drops = minetest.handle_node_drops
+
+function minetest.handle_node_drops(pos, drops, digger)
+
+	-- are we holding Lava Pick?
+	if digger:get_wielded_item():get_name() ~= ("mobs:pick_lava") then
+		return old_handle_node_drops(pos, drops, digger)
+	end
+
+	-- reset new smelted drops
+	local hot_drops = {}
+
+	-- loop through current node drops
+	for _, drop in pairs(drops) do
+
+		-- get cooked output of current drops
+		local stack = ItemStack(drop)
+		local output = minetest.get_craft_result({
+			method = "cooking",
+			width = 1,
+			items = {drop}
+		})
+
+		-- if we have cooked result then add to new list
+		if output
+		and output.item
+		and not output.item:is_empty() then
+
+			table.insert(hot_drops,
+				ItemStack({
+					name = output.item:get_name(),
+					count = stack:get_count()
+				})
+			)
+
+		else -- if not then return normal drops
+			table.insert(hot_drops, stack)
+		end
+	end
+
+	return old_handle_node_drops(pos, hot_drops, digger)
+end
+
+minetest.register_tool("mobs:pick_lava", {
+	description = "Lava Pickaxe",
+	inventory_image = "mobs_pick_lava.png",
+	tool_capabilities = {
+		full_punch_interval = 0.4,
+		max_drop_level=3,
+		groupcaps={
+			cracky = {times={[1]=1.80, [2]=0.90, [3]=0.45}, uses=30, maxlevel=3},
+		},
+		damage_groups = {fleshy=6},
+	},
+})
+
+minetest.register_craft({
+	output = "mobs:pick_lava",
+	recipe = {
+		{"mobs:lava_orb", "mobs:lava_orb", "mobs:lava_orb"},
+		{"", "default:obsidian_shard", ""},
+		{"", "default:obsidian_shard", ""},
+	}
+})
