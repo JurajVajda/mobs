@@ -16,6 +16,7 @@ mobs:register_mob("mobs:dirt_monster", {
 	mesh = "mobs_stone_monster.b3d",
 	textures = {
 		{"mobs_dirt_monster.png"},
+		{"mobs_dirt_monster2.png"},
 	},
 	blood_texture = "default_dirt.png",
 	makes_footstep_sound = true,
