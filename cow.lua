@@ -15,6 +15,7 @@ mobs:register_mob("mobs:cow", {
 	mesh = "mobs_cow.x",
 	textures = {
 		{"mobs_cow.png"},
+		{"mobs_cow2.png"},
 	},
 	makes_footstep_sound = true,
 	sounds = {
