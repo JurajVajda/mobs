@@ -1,5 +1,5 @@
 
--- Cow by Krupnovpavel
+-- Cow by Krupnovpavel (additional texture by JurajVajda)
 
 mobs:register_mob("mobs:cow", {
 	type = "animal",
