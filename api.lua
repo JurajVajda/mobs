@@ -1015,7 +1015,7 @@ minetest.register_entity(name, {
 					if d > 5 then
 
 						--self.object:set_hp(self.object:get_hp() - math.floor(d - 5))
-						self.health = self.health - max.floor(d - 5)
+						self.health = self.health - math.floor(d - 5)
 
 						effect(pos, 5, "tnt_smoke.png")
 
