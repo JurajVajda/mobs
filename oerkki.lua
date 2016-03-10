@@ -50,8 +50,8 @@ mobs:register_mob("mobs:oerkki", {
 	replace_with = "air",
 	replace_offset = -1,
 	immune_to = {
-		{"default:sword_wood", 0},
-		{"default:gold_lump", -10},
+		{"default:sword_wood", 0}, -- no damage
+		{"default:gold_lump", -10}, -- heals by 10 points
 	},
 })
 
