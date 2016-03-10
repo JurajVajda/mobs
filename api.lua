@@ -1,4 +1,4 @@
--- Mobs Api (4th March 2016)
+-- Mobs Api (10th March 2016)
 mobs = {}
 mobs.mod = "redo"
 
@@ -215,17 +215,10 @@ end
 -- check if mob is dead or only hurt
 function check_for_death(self)
 
-	-- return if no change
-	local hp = self.object:get_hp()
-
-	if hp == self.health then
-		return false
-	end
+	--print ("Health is", self.health)
 
 	-- still got some health? play hurt sound
-	if hp > 0 then
-
-		self.health = hp
+	if self.health > 0 then
 
 		if self.sounds.damage then
 
@@ -366,7 +359,7 @@ do_env_damage = function(self)
 	and self.time_of_day < 0.8
 	and (minetest.get_node_light(pos) or 0) > 12 then
 
-		self.object:set_hp(self.object:get_hp() - self.light_damage)
+		self.health = self.health - self.light_damage
 
 		effect(pos, 5, "tnt_smoke.png")
 	end
@@ -387,7 +380,7 @@ do_env_damage = function(self)
 		if self.water_damage ~= 0
 		and nodef.groups.water then
 
-			self.object:set_hp(self.object:get_hp() - self.water_damage)
+			self.health = self.health - self.water_damage
 
 			effect(pos, 5, "bubble.png")
 		end
@@ -398,7 +391,7 @@ do_env_damage = function(self)
 		or self.standing_in == "fire:basic_flame"
 		or self.standing_in == "fire:permanent_flame") then
 
-			self.object:set_hp(self.object:get_hp() - self.lava_damage)
+			self.health = self.health - self.lava_damage
 
 			effect(pos, 5, "fire_basic_flame.png")
 		end
@@ -939,6 +932,7 @@ minetest.register_entity(name, {
 	runaway = def.runaway,
 	runaway_timer = 0,
 	pathfinding = def.pathfinding,
+	immune_to = def.immune_to or {},
 
 	on_step = function(self, dtime)
 
@@ -1020,7 +1014,8 @@ minetest.register_entity(name, {
 
 					if d > 5 then
 
-						self.object:set_hp(self.object:get_hp() - math.floor(d - 5))
+						--self.object:set_hp(self.object:get_hp() - math.floor(d - 5))
+						self.health = self.health - max.floor(d - 5)
 
 						effect(pos, 5, "tnt_smoke.png")
 
@@ -1834,6 +1829,37 @@ minetest.register_entity(name, {
 		local weapon = hitter:get_wielded_item()
 		local punch_interval = 1.4
 
+		-- calculate mob damage
+		local damage = 0
+		local armor = self.object:get_armor_groups() or {}
+		local tmp
+
+		for group,_ in pairs(tool_capabilities.damage_groups) do
+
+			tmp = tflp / tool_capabilities.full_punch_interval
+
+			if tmp < 0 then
+				tmp = 0.0
+			elseif tmp > 1 then
+				tmp = 1.0
+			end
+
+			damage = damage + (tool_capabilities.damage_groups[group] or 0)
+				* tmp * ((armor[group] or 0) / 100.0)
+		end
+
+		-- check for tool immunity or special damage
+		for _, no in pairs(self.immune_to) do
+
+			if no[1] == weapon:get_name() then
+				damage = no[2] or 0
+				break
+			end
+		end
+
+		-- print ("Mob Damage is", damage)
+
+		-- add weapon wear
 		if tool_capabilities then
 			punch_interval = tool_capabilities.full_punch_interval or 1.4
 		end
@@ -1861,6 +1887,10 @@ minetest.register_entity(name, {
 			})
 		end
 
+		-- do damage
+		--self.object:set_hp(self.object:get_hp() - damage)
+		self.health = self.health - damage
+
 		-- exit here if dead
 		if check_for_death(self) then
 			return
@@ -1877,8 +1907,9 @@ minetest.register_entity(name, {
 			effect(pos, self.blood_amount, self.blood_texture)
 		end
 
-		-- knock back effect
-		if self.knock_back > 0 then
+		-- knock back effect (only on full punch)
+		if self.knock_back > 0
+		and tflp > punch_interval then
 
 			local v = self.object:getvelocity()
 			local r = 1.4 - math.min(punch_interval, 1.4)
@@ -2040,8 +2071,8 @@ minetest.register_entity(name, {
 		self.path.stuck_timer = 0 -- if stuck for too long search for path
 		-- end init
 
-		self.object:set_hp(self.health)
-		self.object:set_armor_groups({fleshy = self.armor})
+		--self.object:set_hp(self.health)
+		self.object:set_armor_groups({immortal = 1, fleshy = self.armor})
 		self.old_y = self.object:getpos().y
 		self.object:setyaw((math.random(0, 360) - 180) / 180 * pi)
 		self.sounds.distance = self.sounds.distance or 10

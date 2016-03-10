@@ -49,6 +49,10 @@ mobs:register_mob("mobs:oerkki", {
 	replace_what = {"default:torch"},
 	replace_with = "air",
 	replace_offset = -1,
+	immune_to = {
+		{"default:sword_wood", 0},
+		{"default:gold_lump", -10},
+	},
 })
 
 mobs:register_spawn("mobs:oerkki", {"default:stone"}, 7, 0, 7000, 2, -10)
