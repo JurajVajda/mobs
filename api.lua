@@ -229,6 +229,11 @@ function check_for_death(self)
 			})
 		end
 
+		-- make sure health isn't higher than max
+		if self.health > self.hp_max then
+			self.health = self.hp_max
+		end
+
 		update_tag(self)
 
 		return false
@@ -1888,8 +1893,7 @@ minetest.register_entity(name, {
 		end
 
 		-- do damage
-		--self.object:set_hp(self.object:get_hp() - damage)
-		self.health = self.health - damage
+		self.health = self.health - math.floor(damage)
 
 		-- exit here if dead
 		if check_for_death(self) then
